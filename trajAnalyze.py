@@ -46,7 +46,7 @@ for i in range(length):
     temp = raw[i].split();
 
     indexIndividual = int(np.floor(i/48));
-    '''For fractional only. If it's not fractional, change 0 to -1'''
+    '''This "if" is useless. I'm just too lazy to delete it'''
     if indexIndividual==-1:
         if temp[0] == 'H':
             index_h = count_h%24;
