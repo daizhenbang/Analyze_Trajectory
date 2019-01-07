@@ -4,19 +4,27 @@ import operations as op
 import math as ma
 
 key = 'ground';
-name1 = key + '_trajectory.txt';#You should change this to the file name of your trajectory file
+#name1 = key + '_trajectory.txt';#You should change this to the file name of your trajectory file
 name2 = 'ave' + key + 'traj.txt';
 #name3 = key + '_traj.png'
+'''Other file'''
+name1 = 'cubic_traj.txt';
+''''''
+
 file = open(name1,'r');
-raw0 = file.readlines();
+raw = file.readlines();
 file.close();
 
-#raw = raw0[48*1000:48*11000];
+#raw = raw0[0:48*1000];
 
 lattice = np.zeros((3,3));
-lattice[0][0] = 8.58;
-lattice[1][1] = 8.87;
-lattice[2][2] = 12.63;
+lattice[0][0] = 8.925809001399999;
+lattice[1][1] = 8.925809001399999;
+lattice[2][2] = 12.623000144000001;
+
+#lattice[0][0] = 8.58;
+#lattice[1][1] = 8.87;
+#lattice[2][2] = 12.63;
 
 length = len(raw);
 numStruct = int(length/48);
@@ -38,33 +46,72 @@ for i in range(length):
     temp = raw[i].split();
 
     indexIndividual = int(np.floor(i/48));
-    if temp[0] == 'H':
-        index_h = count_h%24;
-        all_h[indexIndividual][index_h] = temp[1:4];
-        count_h += 1;
+    '''For fractional only. If it's not fractional, change 0 to -1'''
+    if indexIndividual==-1:
+        if temp[0] == 'H':
+            index_h = count_h%24;
+            all_h[indexIndividual][index_h] = temp[1:4];
+            count_h += 1;
+            
+        elif temp[0] == 'C':
+            index_c = count_c%4;
+            all_c[indexIndividual][index_c] = temp[1:4];
+            count_c += 1;
+            
+        elif temp[0] == 'N':
+            index_n = count_n%4;
+            all_n[indexIndividual][index_n] = temp[1:4];
+            count_n += 1;
+            
+        elif temp[0] == 'Pb':
+            index_pb = count_pb%4;
+            all_pb[indexIndividual][index_pb] = temp[1:4];
+            count_pb += 1;
+            
+        elif temp[0] == 'I':
+            index_i = count_i%12;
+            all_i[indexIndividual][index_i] = temp[1:4];
+            count_i += 1;
         
-    elif temp[0] == 'C':
-        index_c = count_c%4;
-        all_c[indexIndividual][index_c] = temp[1:4];
-        count_c += 1;
+        index = i%48;
+        allData[indexIndividual][index] = temp[1:4];
+
+    else:       
+        if temp[0] == 'H':
+            index_h = count_h%24;
+            all_h[indexIndividual][index_h] = temp[1:4];
+            all_h[indexIndividual][index_h] = np.matmul(all_h[indexIndividual][index_h],lattice);
+            count_h += 1;
+            
+        elif temp[0] == 'C':
+            index_c = count_c%4;
+            all_c[indexIndividual][index_c] = temp[1:4];
+            all_c[indexIndividual][index_c] = np.matmul(all_c[indexIndividual][index_c],lattice);
+            count_c += 1;
+            
+        elif temp[0] == 'N':
+            index_n = count_n%4;
+            all_n[indexIndividual][index_n] = temp[1:4];
+            all_n[indexIndividual][index_n] = np.matmul(all_n[indexIndividual][index_n],lattice);
+            count_n += 1;
+            
+        elif temp[0] == 'Pb':
+            index_pb = count_pb%4;
+            all_pb[indexIndividual][index_pb] = temp[1:4];
+            all_pb[indexIndividual][index_pb] = np.matmul(all_pb[indexIndividual][index_pb],lattice);
+            count_pb += 1;
+            
+        elif temp[0] == 'I':
+            index_i = count_i%12;
+            all_i[indexIndividual][index_i] = temp[1:4];
+            all_i[indexIndividual][index_i] = np.matmul(all_i[indexIndividual][index_i],lattice);
+            count_i += 1;
         
-    elif temp[0] == 'N':
-        index_n = count_n%4;
-        all_n[indexIndividual][index_n] = temp[1:4];
-        count_n += 1;
-        
-    elif temp[0] == 'Pb':
-        index_pb = count_pb%4;
-        all_pb[indexIndividual][index_pb] = temp[1:4];
-        count_pb += 1;
-        
-    elif temp[0] == 'I':
-        index_i = count_i%12;
-        all_i[indexIndividual][index_i] = temp[1:4];     
-        count_i += 1;
+        index = i%48;
+        allData[indexIndividual][index] = temp[1:4];
+        allData[indexIndividual][index] = np.matmul(allData[indexIndividual][index],lattice);
     
-    index = i%48;
-    allData[indexIndividual][index] = temp[1:4];
+
 
 '''Pull back all the atoms according its previous configuration'''
 diff = np.zeros((48,3));
@@ -104,6 +151,8 @@ for i in range(1,numStruct,1):
         for k in range(3):
             diff_i[j][k] = round(diff_i[j][k]/lattice[k][k]);
         all_i[i][j] = all_i[i][j] - np.matmul(diff_i[j],lattice);
+
+
 
 '''Get the rotation of each molecule. phi, cos(theta)'''
 molecules = np.zeros((numStruct,4,2));
@@ -145,7 +194,7 @@ plt.title('Molecule 4',fontsize=20)
 plt.ylabel(r'$\phi$',fontsize=20)
 plt.xlabel('time/fs',fontsize=20)
 
-#fig1.savefig(key+'_phi_vs_time.png',fontsize=20)
+fig1.savefig('cubic'+key+'_phi_vs_time.png',fontsize=20)
 
 fig2 = plt.figure(figsize=(20,16));
 mole1 = fig2.add_subplot(2,2,1);
@@ -172,7 +221,7 @@ plt.title('Molecule 4',fontsize=20)
 plt.ylabel(r'cos$\theta$',fontsize=20)
 plt.xlabel('time/fs',fontsize=20)
 
-#fig2.savefig(key + '_costheta_vs_time.png')
+fig2.savefig('cubic'+key + '_costheta_vs_time.png')
 '''End of analyzing the rotation of the molecule'''
 
 '''Plot the displacement'''
